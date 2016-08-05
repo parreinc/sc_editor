@@ -1,0 +1,728 @@
+<?php
+
+function mapping_menu() {
+
+	$items['mappings'] = array(
+		'title' => 'mapping',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mapping_basic'),
+		'access callback' => TRUE,
+	);
+	return $items;
+}
+
+
+function mapping_basic($form, &$form_state) {
+	
+	$datamodel_list= mapping_basic_populate_list();
+	$dropdown_array= mapping_basic_relations_list();
+		  
+	$form = array();
+	
+	$form['datamodellist1'] = array (
+					'#title' => t('Choose a datamodel to map to or insert a new one'),
+					'#type' => 'select',
+					'#options' => $datamodel_list,
+					'#default_value' => 'default',			
+				);
+	
+	$form['datamodellist2'] = array (
+					'#title' => t('Choose a datamodel to map or insert a new one'),
+					'#type' => 'select',
+					'#options' => $datamodel_list,
+					'#default_value' => 'default',
+					
+				);
+	
+	$form['wrapper_datamodels'] = array(
+		 '#prefix' => '<div id="wrapper-datamodels">',
+	 	 '#suffix' => '</div>',
+	 	 );	
+	
+	$form['wrapper_datamodels']['datamodel_fieldset1'] = array(
+		 '#type' => 'fieldset',
+	 	 '#title' => t('datamodel 1'),
+	 	 '#prefix' => '<div id="datamodel-fieldset1">',
+	 	 '#suffix' => '</div>',
+	 	 );	
+	
+	$form['wrapper_datamodels']['datamodel_fieldset2'] = array(
+		 '#type' => 'fieldset',
+	 	 '#title' => t('datamodel 2'),
+	 	 '#prefix' => '<div id="datamodel-fieldset2">',
+	 	 '#suffix' => '</div>',
+	 	 );	  	 	 
+		 
+			$form['wrapper_datamodels']['datamodel_fieldset1']['datamodel1'] = array (
+		  	  		'#title' => t('Name of the first datamodel'),
+					'#type' => 'textfield',
+					'#size' => '50',
+					'#states' => array(
+						'visible' => array(
+						':input[name="datamodellist1"]' => array('value' => '0'),
+							),
+						),
+					);
+			 $form['wrapper_datamodels']['datamodel_fieldset1']['URI1'] = array (
+		  	  		'#title' => t('URI'),
+					'#type' => 'textfield',
+					'#size' => '50',
+					'#states' => array(
+						'visible' => array(
+						':input[name="datamodellist1"]' => array('value' => '0'),
+							),
+						),
+					);
+		  
+			
+			 $form['wrapper_datamodels']['datamodel_fieldset2']['datamodel2'] = array (
+		  	  		'#title' => t('Name of the second datamodel'),                                     
+					'#type' => 'textfield',
+					'#size' => '50',
+					'#states' => array(
+						'visible' => array(
+						':input[name="datamodellist2"]' => array('value' => '0'),
+							),
+						),
+					);
+			 
+			   $form['wrapper_datamodels']['datamodel_fieldset2']['URI2'] = array (
+							'#title' => t('URI'),
+							'#type' => 'textfield',
+							'#size' => '50',
+							'#states' => array(
+								'visible' => array(
+								':input[name="datamodellist2"]' => array('value' => '0'),
+									),
+								),
+							);
+	   
+	   $form['#attached']['css'] = array(
+		  	  drupal_get_path('module', 'mapping') . '/mapping.css',
+		);
+	   
+	   $form['#tree'] = TRUE;
+	   $form['relations_fieldset'] = array(
+	 	 '#type' => 'fieldset',
+	 	 '#title' => t('mapping relations'),
+	 	 '#prefix' => '<div id="relations-fieldset-wrapper">',
+	 	 '#suffix' => '</div>',
+	 	 );	
+	   
+	   	$form['relations_fieldset']['labels']['dummylabelprobnotgoodpractice'] = array (
+		  	  		'#markup' => '<h2> </h2>',
+					);
+		
+		  $form['relations_fieldset']['labels']['core_class_label'] = array (
+		  	  		'#markup' => '<h1>Core Class</h1>',
+					);
+		  
+		  $form['relations_fieldset']['labels']['core_property_label'] = array (
+					'#markup' => '<h1>Core Property</h1>',
+					);
+		  
+		  $form['relations_fieldset']['labels']['relation_label'] = array (
+					'#markup' => '<h1>Relation</h1>',
+					);
+		  
+		  $form['relations_fieldset']['labels']['mapped_class_label'] = array (
+					'#markup' => '<h1>Mapped Class</h1>',
+					);
+		  
+		  $form['relations_fieldset']['labels']['mapped_property_label'] = array (
+					'#markup' => '<h1>Mapped Property</h1>',
+					);
+		  
+		  $form['relations_fieldset']['labels']['mapped_property_label'] = array (
+					'#markup' => '<h1>Mapped Property</h1>',
+					);
+		  
+		  $form['relations_fieldset']['labels']['syntax_mapping_label'] = array (
+					'#markup' => '<h1>Syntax Mapping</h1>',
+					);
+	
+		  if (empty($form_state['num_relations'])) {
+		  	  $form_state['num_relations'] =1;
+		  }
+		  
+		  for ($i = 0; $i < $form_state['num_relations']; $i++) {
+		  	  
+		  	  $form['relations_fieldset'][$i]['relationship_label'] = array (
+		  	  		'#markup' => '<h2>Relationships:</h2>',
+					);
+
+				$form['relations_fieldset'][$i]['core_class'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+/*					'#ajax' => array(
+						'event' => 'change',
+						'callback' => 'mapping_generate_uri',
+						'wrapper' => 'relations-fieldset-wrapper',
+						'method' => 'replace',
+						),*/
+					);
+				
+				$form['relations_fieldset'][$i]['core_property'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+/*						'#ajax' => array(
+						'event' => 'change',
+						'callback' => 'mapping_generate_uri',
+						'wrapper' => 'relations-fieldset-wrapper',
+						'method' => 'replace',
+						),*/
+					);
+								
+				$form['relations_fieldset'][$i]['relation'] = array (
+					'#type' => 'select',
+					'#options' => $dropdown_array,
+/*						'#ajax' => array(
+						'event' => 'change',
+						'callback' => 'mapping_generate_uri',
+						'wrapper' => 'relations-fieldset-wrapper',
+						'method' => 'replace',
+						),*/
+					);
+				
+				$form['relations_fieldset'][$i]['mapped_class'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+/*						'#ajax' => array(
+						'event' => 'change',
+						'callback' => 'mapping_generate_uri',
+						'wrapper' => 'relations-fieldset-wrapper',
+						'method' => 'replace',
+						),*/
+					
+					);
+				
+				$form['relations_fieldset'][$i]['mapped_property'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+/*						'#ajax' => array(
+						'event' => 'change',
+						'callback' => 'mapping_generate_uri',
+						'wrapper' => 'relations-fieldset-wrapper',
+						'method' => 'replace',
+						), */
+					);
+				
+				$form['relations_fieldset'][$i]['syntax_mapping'] = array (
+					'#type' => 'checkbox',				
+					);		
+				
+				//URI's if needed 
+				
+				$form['relations_fieldset'][$i]['uri_label'] = array (
+		  	  		'#markup' => '<h2>Uri\'s: </h2>',
+					);
+				
+				
+					$form['relations_fieldset'][$i]['core_class_URI'] = array (
+					'#title_display'=> 'before',
+					'#type' => 'textfield',
+					'#size' => '10',
+					'#states' => array(
+								'readonly' => array(
+								':input[name="relations_fieldset['.$i.'][known_URI]"]' => array('checked' => FALSE),
+									),
+								),
+					);
+				
+				$form['relations_fieldset'][$i]['core_property_URI'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+					'#states' => array(
+								'readonly' => array(
+								':input[name="relations_fieldset['.$i.'][known_URI]"]' => array('checked' => FALSE),
+									),
+								),
+					);
+								
+				$form['relations_fieldset'][$i]['relation_URI'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+					 '#attributes' => array('hidden' => 'hidden'),
+					);
+				
+				$form['relations_fieldset'][$i]['mapped_class_URI'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+					'#states' => array(
+								'readonly' => array(
+								':input[name="relations_fieldset['.$i.'][known_URI]"]' => array('checked' => FALSE),
+									),
+								),
+					);
+				
+				$form['relations_fieldset'][$i]['mapped_property_URI'] = array (
+					'#type' => 'textfield',
+					'#size' => '10',
+					'#states' => array(
+								'readonly' => array(
+								':input[name="relations_fieldset['.$i.'][known_URI]"]' => array('checked' => FALSE),
+									),
+								),
+					);
+				
+				
+				$form['relations_fieldset'][$i]['known_uri'] = array (
+		  	  		'#markup' => '<h3> only fill in the uri\'s if they are known </h3>',
+				);
+					
+				$form['relations_fieldset'][$i]['line'] = array (
+		  	  		'#markup' => '<div class="style1"></div>',
+				);
+				
+				
+			}
+			
+		/*	$form['generate_URI'] = array(
+				'#type' => 'submit',
+				'#value' => t('generate'),
+				'#submit' => array('mapping_generate_uri'),
+				'#limit_validation_errors' => array(),
+				'#ajax' => array(
+					'callback' => 'mapping_add_more_callback',
+					'wrapper' => 'relations-fieldset-wrapper',
+					),
+				);*/
+			
+			$form['generate_uri'] = array(
+				'#type' => 'submit',
+				'#submit' => array('mapping_generate_uri'),
+				'#value' => t('generate uri\'s'),
+				'#ajax' => array(
+					'event' => 'change',
+					'callback' => 'mapping_add_more_callback',
+					'wrapper' => 'relations-fieldset-wrapper',
+					),
+				);
+			
+			
+			$form['add_relation'] = array(
+				'#type' => 'submit',
+				'#value' => t('add relation'),
+				'#submit' => array('mapping_add_one'),
+				'#limit_validation_errors' => array(),
+				'#ajax' => array(
+					'callback' => 'mapping_add_more_callback',
+					'wrapper' => 'relations-fieldset-wrapper',
+					),
+				);
+				  	  	
+  	  	  	$form['add_5_relations'] = array(
+  	  	  		'#type' => 'submit',
+  	  	  		'#value' => ('+5 relations'),
+  	  	  		'#submit' => array('mapping_add_five'),
+  	  	  		'#limit_validation_errors' => array(),
+  	  	  		'#ajax' => array(
+					'callback' => 'mapping_add_more_callback',
+					'wrapper' => 'relations-fieldset-wrapper',
+					),
+				);
+			
+			
+			$form['remove_relation'] = array(
+				'#type' => 'submit',
+				'#value' => ('remove relation'),
+				'#submit' => array('mapping_remove_one'),
+				'#limit_validation_errors' => array(),
+				'#ajax' => array(
+					'callback' => 'mapping_add_more_callback',
+					'wrapper' => 'relations-fieldset-wrapper',
+					
+					),
+			
+				);
+			
+			$form['remove_five_relations'] = array(
+				'#type' => 'submit',
+				'#value' => ('-5 relations'),
+				'#submit' => array('mapping_remove_five'),
+				'#limit_validation_errors' => array(),
+				'#ajax' => array(
+					'callback' => 'mapping_add_more_callback',
+					'wrapper' => 'relations-fieldset-wrapper',
+					),
+				);
+  	  	  	
+		   $form['submit'] = array(
+			 '#type' => 'submit',
+			 '#value' => t('Submit'),	
+			 '#attributes' => array('onclick' => 'if(!confirm("are you sure you want to submit the mapping?")){return false;}')
+			
+			
+			 );
+		
+	
+	return $form;
+	
+}
+
+
+function mapping_generate_uri($form, &$form_state ){
+	
+	$select1 = $form_state['complete form']['datamodellist2']['#options'][$form_state['values']['datamodellist1']];
+	$select2 = $form_state['complete form']['datamodellist2']['#options'][$form_state['values']['datamodellist2']];
+
+	if($select1== "add new") {
+		$datamodel1=$form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['datamodel1'];
+		$datamodelURI1= $form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['URI1'];
+	}
+	else {
+		$datamodel1=$select1;
+		$result1= db_query('SELECT uri FROM datamodels WHERE name= :datamodel1', array(':datamodel1' => $datamodel1));
+		
+		$datamodelURI1= $result1->fetchField(0);		
+	}
+		
+	if($select2== "add new") {
+		$datamodel2=$form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['datamodel2'];
+		$datamodelURI2= $form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['URI2'];
+	}
+	else {
+		$datamodel2=$select2;
+		$result2 = db_query('SELECT uri FROM datamodels WHERE name= :datamodel2', array(':datamodel2' => $datamodel2));
+		$datamodelURI2= $result2->fetchField(0);
+		
+	}
+	$root = (!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/';
+	echo 'drie';
+	drupal_set_message('data:'.$select1);
+	
+	for($i = 0; $i < $form_state['num_relations']; $i++){
+				
+		if(!empty(trim($form_state['values']['relations_fieldset'][$i]['core_class'])) && empty(trim($form_state['values']['relations_fieldset'][$i]['core_class_URI']))) {
+			$coreclassUri = $root.'mapping/'.$datamodelURI1.'/class/'.str_replace(' ','',$form_state['values']['relations_fieldset'][$i]['core_class']);
+			unset($form_state['input']['relations_fieldset'][$i]['core_class_URI']); 
+			$form_state['input']['relations_fieldset'][$i]['core_class_URI'] = $coreclassUri;	
+			
+		}
+		
+		if(!empty(trim($form_state['values']['relations_fieldset'][$i]['core_property']))&& empty(trim($form_state['values']['relations_fieldset'][$i]['core_property_URI']))){
+		$corepropertyUri = $root.'mapping/'.$datamodelURI1.'/property/'.str_replace(' ','',$form_state['values']['relations_fieldset'][$i]['core_property']);
+		unset($form_state['input']['relations_fieldset'][$i]['core_property_URI']);
+		$form_state['input']['relations_fieldset'][$i]['core_property_URI'] = $corepropertyUri;	 
+		//$form['relations_fieldset'][$i]['core_property_URI']['#value']= $corepropertyUri;
+		}
+	
+		$relation_choice= $form_state['complete form']['relations_fieldset'][$i]['relation']['#options'][$form_state['values']['relations_fieldset'][$i]['relation']];
+	
+			
+		if($relation_choice=='Exact match')
+			$form_state['input']['relations_fieldset'][$i]['relation_URI']='skos:exactMatch';
+		if($relation_choice=='Close match')
+			$form_state['input']['relations_fieldset'][$i]['relation_URI']='skos:closeMatch';
+		if($relation_choice=='Narrow match')
+			$form_state['input']['relations_fieldset'][$i]['relation_URI']='skos:narrowMatch';
+		if($relation_choice=='Broad match')
+			$form_state['input']['relations_fieldset'][$i]['relation_URI']='skos:broadMatch';
+		if($relation_choice=='Related match')
+			$form_state['input']['relations_fieldset'][$i]['relation_URI']='skos:relatedMatch';
+		
+	
+		
+		if(!empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_class']))&& empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_class_URI']))){
+		$mappedclassUri = $root.'mapping/'.$datamodelURI2.'/class/'.str_replace(' ','',$form_state['values']['relations_fieldset'][$i]['mapped_class']);
+		unset($form_state['input']['relations_fieldset'][$i]['mapped_class_URI']); 
+		$form_state['input']['relations_fieldset'][$i]['mapped_class_URI'] = $mappedclassUri;	
+		//$form['relations_fieldset'][$i]['mapped_class_URI']['#value']= $mappedclassUri;
+		}
+		
+		if(!empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_property']))&& empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_property_URI']))) {
+		$mappedpropertyUri = $root.'mapping/'.$datamodelURI2.'/property/'.str_replace(' ','',$form_state['values']['relations_fieldset'][$i]['mapped_property']);
+		unset($form_state['input']['relations_fieldset'][$i]['mapped_property_URI']);
+		$form_state['input']['relations_fieldset'][$i]['mapped_property_URI'] = $mappedpropertyUri;	
+		//$form['relations_fieldset'][$i]['mapped_property_URI']['#value']= $mappedpropertyUri;
+		}			
+	
+	}
+	$form_state['rebuild']= TRUE;
+		
+	return form_builder('form-wrapper', $form['relations_fieldset'], $form_state);
+}
+
+function mapping_add_one($form, &$form_state) {
+	$form_state['num_relations']++;
+	$form_state['rebuild'] = TRUE;
+	
+}
+
+function mapping_add_five($form,&$form_state) {
+	$form_state['num_relations'] += 5;
+	$form_state['rebuild'] = TRUE;
+}
+
+	
+function mapping_remove_one($form, &$form_state) {
+	if($form_state['num_relations'] > 1){
+		$form_state['num_relations']--;
+		$form_state['rebuild'] = TRUE;
+	}
+		 
+}
+
+function mapping_remove_five($form, &$form_state) {
+	if($form_state['num_relations'] > 5){
+		$form_state['num_relations']-=5;
+		$form_state['rebuild'] = TRUE;
+	}
+}
+	
+function mapping_add_more_callback($form, $form_state) {
+
+  return $form['relations_fieldset'];
+}	
+
+function mapping_basic_validate($form, &$form_state){
+	$foo = FALSE;
+ 
+  $option1 = $form_state['complete form']['datamodellist1']['#options'][$form_state['values']['datamodellist1']];
+  $option2 = $form_state['complete form']['datamodellist2']['#options'][$form_state['values']['datamodellist2']];
+	
+	if($option1== "add new"){
+  	  if(empty(trim($form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['datamodel1']))){
+  	  	  form_set_error('postal', t('datamodel 1 name is required.'));
+  	  	  
+ 	 	 $foo= TRUE;
+ 	  }
+ 	  
+ 	   if(empty(trim($form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['URI1']))){
+  	  	  form_set_error('postal', t('datamodel uri is required.'));
+ 	 	 $foo= TRUE;
+ 	  }
+  }
+  
+  if($option2== "add new"){
+  	  
+  	  if(empty(trim($form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['datamodel2']))){
+  	  	  form_set_error('postal', t('datamodel 2 name is required.'));
+ 	 	 $foo= TRUE;
+ 	  }
+ 	  
+ 	   if(empty(trim($form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['URI2']))){
+  	  	  form_set_error('postal', t('datamodel uri is required.'));
+ 	 	 $foo= TRUE;
+ 	  }
+  }
+
+	for($i = 0; $i < $form_state['num_relations']; $i++){
+ 	 if(!empty(trim($form_state['values']['relations_fieldset'][$i]['core_property'])) && !empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_class'])) &&empty(trim($form_state['values']['relations_fieldset'][$i]['core_class']))) {
+ 	 	 form_set_error('postal', t('The Core class is required.'));
+ 	 	 $foo= TRUE;
+ 	}
+ 	
+ 	if(!empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_property'])) && empty(trim($form_state['values']['relations_fieldset'][$i]['core_property']))) {
+ 	 	 form_set_error('postal', t('The Core property is required.'));
+ 	 	 $foo= TRUE;
+ 	}
+ 	
+ 	if(empty(trim($form_state['values']['relations_fieldset'][$i]['relation']))) {
+ 	 	 form_set_error('postal', t('The relation is required.'));
+ 	 	 $foo= TRUE;
+ 	}
+ 	
+ 	if(!empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_property'])) && empty(trim($form_state['values']['relations_fieldset'][$i]['core_class'])) && empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_class']))) {
+ 	 	 form_set_error('postal', t('The mapped class is required.'));
+ 	 	 $foo= TRUE;
+ 	}
+ 	
+ 	if(!empty(trim($form_state['values']['relations_fieldset'][$i]['core_property'])) && empty(trim($form_state['values']['relations_fieldset'][$i]['mapped_property']))) {
+ 	 	 form_set_error('postal', t('The mapped property is required.'));
+ 	 	 $foo= TRUE;
+ 	
+  }
+  	}
+    
+  	 
+  if($foo==TRUE){
+  	 return;
+  }
+}
+
+function mapping_basic_submit($form, &$form_state) {
+	
+	
+		$select1 = $form_state['complete form']['datamodellist1']['#options'][$form_state['values']['datamodellist1']];
+	$select2 = $form_state['complete form']['datamodellist2']['#options'][$form_state['values']['datamodellist2']];
+	
+	
+	if($select1== "add new") {
+		$datamodel1=$form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['datamodel1'];
+		$datamodelURI1= $form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['URI1'];
+	}
+	else {
+		$datamodel1=$select1;
+		$result1= db_query('SELECT uri FROM datamodels WHERE name= :datamodel1', array(':datamodel1' => $datamodel1));
+		
+		$datamodelURI1= $result1->fetchField(0);
+		
+		
+	}
+		
+	if($select2== "add new") {
+		$datamodel2=$form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['datamodel2'];
+		$datamodelURI2= $form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['URI2'];
+	}
+	else {
+		$datamodel2=$select2;
+		$result2 = db_query('SELECT uri FROM datamodels WHERE name= :datamodel2', array(':datamodel2' => $datamodel2));
+		$datamodelURI2= $result2->fetchField(0);
+	}
+	
+	
+ for($i = 0; $i < $form_state['num_relations']; $i++){
+ 	 
+
+ 	$coreclass= $form_state['values']['relations_fieldset'][$i]['core_class'];
+ 	$coreclassuri=$form_state['values']['relations_fieldset'][$i]['core_class_URI'];
+	$coreproperty=$form_state['values']['relations_fieldset'][$i]['core_property'];
+	$corepropertyuri=$form_state['values']['relations_fieldset'][$i]['core_property_URI'];
+	$relation= $form_state['complete form']['relations_fieldset'][$i]['relation']['#options'][$form_state['values']['relations_fieldset'][$i]['relation']];
+	$relationuri= $form_state['values']['relations_fieldset'][$i]['relation_URI'];
+	$mappedclass= $form_state['values']['relations_fieldset'][$i]['mapped_class'];
+	$mappedclassuri= $form_state['values']['relations_fieldset'][$i]['mapped_class_URI'];
+	$mappedproperty= $form_state['values']['relations_fieldset'][$i]['mapped_property'];
+	$mappedpropertyuri= $form_state['values']['relations_fieldset'][$i]['mapped_property_URI'];
+	
+	if(!$form_state['values']['relations_fieldset'][$i]['syntax_mapping'])
+		$synmap= 0;
+	else
+		$synmap= $form_state['values']['relations_fieldset'][$i]['syntax_mapping'];
+ 	 
+	drupal_set_message($relation);
+	db_insert('relations')
+    ->fields(array(
+    	
+      'did1' => $datamodel1,
+      'did2' => $datamodel2,
+      'coreclass' =>$coreclass, 
+      'coreclassuri' => $coreclassuri,
+      'coreproperty' =>$coreproperty,
+      'corepropertyuri' =>$corepropertyuri,
+      'relation' =>$relation,
+      'relationuri' =>$relationuri,
+      'mappedclass' =>$mappedclass,
+      'mappedclassuri' =>$mappedclassuri,
+      'mappedproperty' =>  $mappedproperty,
+      'mappedpropertyuri' =>  $mappedpropertyuri,
+      'synmap' =>$synmap,
+      ))->execute();
+    
+   
+ 
+    
+    if($select1 =="add new") {
+    db_insert('datamodels')
+    ->fields(array(
+    	'name' =>$datamodel1,
+    	'uri' =>$form_state['values']['wrapper_datamodels']['datamodel_fieldset1']['URI1'],
+    ))->execute();
+    }
+    
+    if($select2 =='add new') {
+    	db_insert('datamodels')
+    	->fields(array(
+    		'name' =>$datamodel2,
+    		'uri' =>$form_state['values']['wrapper_datamodels']['datamodel_fieldset2']['URI2'],
+    	))->execute();
+    }
+      
+if(easyrdf()){
+		$endpoint= 'http://localhost:8890/sparql';
+ 		$gs = new EasyRdf_Sparql_Client($endpoint);
+ 		$graph1 = new EasyRdf_Graph('http://cpsv-ap_mapping.eu');
+ 		
+ 		//datamodel definition
+ 		$graph1->addResource('http://mapping.semic.eu/def#DataModel', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/2000/01/rdf-schema#Class');
+ 		$graph1->addResource('http://mapping.semic.eu/def#DataModel', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/2004/02/skos/core#Concept');
+ 		$graph1->add('http://mapping.semic.eu/def#DataModel', 'http://www.w3.org/2000/01/rdf-schema#label', "Core Data Model");
+ 		$graph1->add('http://mapping.semic.eu/def#DataModel', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', "reusable data models that are defined, managed, promoted and maintained centrally to facilitate interoperability across different systems, applications and domains"
+);
+ 		
+ 		//datamodel, classes & properties
+ 		$graph1->addResource($datamodelURI1, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://mapping.semic.eu/def#DataModel');
+ 		$graph1->addResource($datamodelURI2, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://mapping.semic.eu/def#DataModel');
+ 		$graph1->addResource($corepropertyuri, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Property');
+ 		$graph1->addResource($mappedpropertyuri, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Property');
+ 		$graph1->addResource($coreclassuri, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/2000/01/rdf-schema#Class');
+ 		$graph1->addResource($mappedclassuri, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/2000/01/rdf-schema#Class');
+ 		
+ 		//ispartof
+ 		
+ 		$graph1->addResource($coreclassuri, 'http://purl.org/dc/terms/isPartOf', $datamodelURI1);
+ 		$graph1->addResource($mappedclassuri, 'http://purl.org/dc/terms/isPartOf', $datamodelURI2);
+ 		$graph1->addResource($corepropertyuri, 'http://purl.org/dc/terms/isPartOf', $coreclassuri);
+ 		$graph1->addResource($mappedpropertyuri, 'http://purl.org/dc/terms/isPartOf', $mappedclassuri);
+ 		$graph1->addResource($corepropertyuri,$relationuri, $mappedpropertyuri); 		
+ 			
+ 	$gs->insert($graph1, 'http://cpsv-ap_mapping.eu');
+ 	
+ 	$graphuri = new EasyRdf_Sparql_Client('http://localhost:8890/sparql');
+ 
+ 	
+ 	$data = $graphuri->query(
+ 	'SELECT *
+ 		FROM <http://cpsv-ap_mapping.eu>
+ 		WHERE {?s ?o <http://mapping.semic.eu/def#DataModel>}
+ 		
+ 		
+ 		'
+ 		
+ 	);
+ 	
+ 	$dataarray= $data->dump('html');
+ 	
+		
+ 		$temp = drupal_realpath('public://');
+ 		drupal_set_message($temp);
+	  // On Windows, tempnam() requires an absolute path, so we use realpath().
+	  $file = tempnam(realpath($temp), 'file');
+	  if (!$fp = fopen($file, 'wb')) {
+		drupal_set_message(t('The file could not be created.'), 'error');
+		return 0;
+	  }
+	  fwrite($fp, $data);
+	  fclose($fp);
+	 	
+	}
+}
+}
+
+function mapping_basic_populate_list(){
+	
+	$databaselist= db_query('SELECT mid,name FROM datamodels') ;
+
+	$options= array('0' => 'add new');
+   	 	foreach ($databaselist as $item) {
+		  	$key = $item->mid;
+		  	$value = $item->name;
+		  	$options[$key] = $value;
+		  }
+		  
+    return $options;
+}
+		  
+function mapping_basic_relations_list() {
+	$voc_name = 'Skos_mappingRelation';
+	$myvoc = taxonomy_vocabulary_machine_name_load($voc_name);
+		  
+	$dropdown_source = taxonomy_get_tree($myvoc->vid);
+	
+	$dropdown_list = array('0' => '---none---');
+		                                                          
+		  foreach ($dropdown_source as $item) {
+		  	  $key = $item->tid;
+		  	  $value = $item->name;
+		  	  $dropdown_list[$key] = $value;
+		  }
+		  
+	return $dropdown_list;
+}
+
+
+
+
+
+	
